@@ -1,7 +1,7 @@
 #!/bin/bash
 dirpath="$(cd "$(dirname "$0")" && pwd)"
 cd ${dirpath}
-export LANG='zh_CN.utf8'
+export LANG='en_US.UTF-8'
 
 APPS_FOLDER=$(pwd)/apps
 PLUGLIN_FOLDER=$(pwd)/plugin
