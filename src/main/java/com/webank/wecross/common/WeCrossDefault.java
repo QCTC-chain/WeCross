@@ -27,5 +27,6 @@ public class WeCrossDefault {
                     "BCOS2.0",
                     "GM_BCOS2.0",
                     "Fabric1.4",
-                    "Fabric2.0");
+                    "Fabric2.0",
+                    "CHAINMAKER");
 }

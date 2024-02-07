@@ -14,7 +14,7 @@ help() {
 Usage:
     -c <chain name>                     [Required] chain name
     -u <upgrade>                        [Optional] upgrade proxy/hub contract if proxy/hub contract has been deployed, default deploy proxy/hub contract
-    -t <type>                           [Required] type of chain, support: BCOS2.0, GM_BCOS2.0, Fabric1.4, Fabric2.0, BCOS3_ECDSA_EVM, BCOS3_GM_EVM, BCOS3_ECDSA_WASM, BCOS3_GM_WASM
+    -t <type>                           [Required] type of chain, support: BCOS2.0, GM_BCOS2.0, Fabric1.4, Fabric2.0, BCOS3_ECDSA_EVM, BCOS3_GM_EVM
     -P <proxy contract>                 [Optional] upgrade/deploy operation on proxy contract
     -H <hub contract>                   [Optional] upgrade/deploy operation on hub contract
     -h                                  [Optional] Help
@@ -35,6 +35,10 @@ e.g
     bash $0 -t Fabric2.0  -c chains/fabric2 -H
     bash $0 -t Fabric2.0  -c chains/fabric2 -u -P
     bash $0 -t Fabric2.0  -c chains/fabric2 -u -H
+    bash $0 -t chainmaker  -c chains/chainmaker -P
+    bash $0 -t chainmaker  -c chains/chainmaker -H
+    bash $0 -t chainmaker  -c chains/chainmaker -u -P
+    bash $0 -t chainmaker  -c chains/chainmaker -u -H
 EOF
 
   exit 0
@@ -69,7 +73,7 @@ bcos_proxy_contract() {
   "GM_BCOS2.0")
     packageName="bcos.guomi"
     ;;
-  "BCOS3_ECDSA_EVM" | "BCOS3_GM_EVM" | "BCOS3_ECDSA_WASM" | "BCOS3_GM_WASM")
+  "BCOS3_ECDSA_EVM" | "BCOS3_GM_EVM")
     packageName="bcos3"
     ;;
   esac
@@ -93,7 +97,7 @@ bcos_hub_contract() {
   "GM_BCOS2.0")
     packageName="bcos.guomi"
     ;;
-  "BCOS3_ECDSA_EVM" | "BCOS3_GM_EVM" | "BCOS3_ECDSA_WASM" | "BCOS3_GM_WASM")
+  "BCOS3_ECDSA_EVM" | "BCOS3_GM_EVM")
     packageName="bcos3"
     ;;
   esac
@@ -185,6 +189,42 @@ update_fabric2_hub_contract() {
   java -Djdk.tls.client.protocols=TLSv1.2 -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative=false -Djdk.tls.namedGroups="SM2,secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448" -cp conf/:lib/*:plugin/* com.webank.wecross.stub.fabric2.hub.HubChaincodeDeployment upgrade "${chainName}"
 }
 
+chainmaker_proxy_contract() {
+  local chainName="$1"
+  local deploy="$2"
+  local type="$3"
+  local packageName=""
+  case $type in
+  "chainmaker")
+    packageName="chainmaker"
+    ;;
+  esac
+
+  local op="deploy"
+  if [[ "${deploy}" == "false" ]]; then
+    op="upgrade"
+  fi
+  java -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative=false -Djdk.tls.namedGroups="SM2,secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448" -cp conf/:lib/*:plugin/* com.webank.wecross.stub."${packageName}".preparation.ProxyDeployContract "${op}" "${chainName}"
+}
+
+chainmaker_hub_contract() {
+  local chainName="$1"
+  local deploy="$2"
+  local type="$3"
+  local packageName=""
+  case $type in
+  "chainmaker")
+    packageName="chainmaker"
+    ;;
+  esac
+
+  local op="deploy"
+  if [[ "${deploy}" == "false" ]]; then
+    op="upgrade"
+  fi
+  java -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative=false -Djdk.tls.namedGroups="SM2,secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448" -cp conf/:lib/*:plugin/* com.webank.wecross.stub."${packageName}".preparation.HubDeployContract "${op}" "${chainName}"
+}
+
 main() {
   local type="$1"
   local chain="$2"
@@ -201,7 +241,7 @@ main() {
   LOG_INFO " deploy_system_contract, type: ${type}, chain: ${chain}, deploy: ${deploy}, contract: ${contract}"
 
   case $type in
-  "BCOS2.0" | "BCOS3_ECDSA_EVM" | "GM_BCOS2.0" | "BCOS3_GM_EVM" | "BCOS3_ECDSA_WASM" | "BCOS3_GM_WASM")
+  "BCOS2.0" | "BCOS3_ECDSA_EVM" | "GM_BCOS2.0" | "BCOS3_GM_EVM")
     if [[ "${contract}" == "proxy" ]]; then
       bcos_proxy_contract "${chain}" "${deploy}" "${type}"
     elif [[ "${contract}" == "hub" ]]; then
@@ -228,6 +268,13 @@ main() {
       update_fabric2_proxy_contract "${chain}"
     elif [[ "${deploy}" == "false" ]] && [[ "${contract}" == "hub" ]]; then
       update_fabric2_hub_contract "${chain}"
+    fi
+    ;;
+  "chainmaker")
+    if [[ "${contract}" == "proxy" ]]; then
+      chainmaker_proxy_contract "${chain}" "${deploy}" "${type}"
+    elif [[ "${contract}" == "hub" ]]; then
+      chainmaker_hub_contract "${chain}" "${deploy}" "${type}"
     fi
     ;;
   *)
