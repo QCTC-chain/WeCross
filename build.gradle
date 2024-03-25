@@ -170,9 +170,9 @@ dependencies {
 
 sourceSets {
     main {
-        resources {
-            exclude '/*'
-        }
+//        resources {
+//            exclude '/*'
+//        }
     }
 }
 

@@ -110,7 +110,7 @@ public class NettyAsyncHttpClientEngine implements ClientMessageEngine {
     public <T extends Response> void asyncSend(
             Request<?> request, TypeReference typeReference, Callback<T> callback) {
         try {
-            String url = "https://" + clientConnection.getServer() + request.getMethod();
+            String url = "http://" + clientConnection.getServer() + request.getMethod();
             if (logger.isDebugEnabled()) {
                 logger.debug("request: {}; url: {}", request.toString(), url);
             }
@@ -187,7 +187,7 @@ public class NettyAsyncHttpClientEngine implements ClientMessageEngine {
             Iterable<Map.Entry<String, String>> headers,
             String body,
             Handler handler) {
-        String url = "https://" + clientConnection.getServer() + uri;
+        String url = "http://" + clientConnection.getServer() + uri;
         BoundRequestBuilder requestBuilder = httpClient.prepare(method, url).setBody(body);
 
         for (Map.Entry<String, String> header : headers) {
