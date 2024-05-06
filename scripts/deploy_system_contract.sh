@@ -14,7 +14,7 @@ help() {
 Usage:
     -c <chain name>                     [Required] chain name
     -u <upgrade>                        [Optional] upgrade proxy/hub contract if proxy/hub contract has been deployed, default deploy proxy/hub contract
-    -t <type>                           [Required] type of chain, support: BCOS2.0, GM_BCOS2.0, Fabric1.4, Fabric2.0, BCOS3_ECDSA_EVM, BCOS3_GM_EVM
+    -t <type>                           [Required] type of chain, support: BCOS2.0, GM_BCOS2.0, Fabric1.4, Fabric2.0, BCOS3_ECDSA_EVM, BCOS3_GM_EVM, ChainMakerWithCert, ChainMakerGMWithCert, ChainMakerWithPublic, ChainMakerGMWithPublic
     -P <proxy contract>                 [Optional] upgrade/deploy operation on proxy contract
     -H <hub contract>                   [Optional] upgrade/deploy operation on hub contract
     -h                                  [Optional] Help
@@ -35,10 +35,10 @@ e.g
     bash $0 -t Fabric2.0  -c chains/fabric2 -H
     bash $0 -t Fabric2.0  -c chains/fabric2 -u -P
     bash $0 -t Fabric2.0  -c chains/fabric2 -u -H
-    bash $0 -t chainmaker  -c chains/chainmaker -P
-    bash $0 -t chainmaker  -c chains/chainmaker -H
-    bash $0 -t chainmaker  -c chains/chainmaker -u -P
-    bash $0 -t chainmaker  -c chains/chainmaker -u -H
+    bash $0 -t ChainMakerWithCert  -c chains/chainmaker -P
+    bash $0 -t ChainMakerWithCert  -c chains/chainmaker -H
+    bash $0 -t ChainMakerWithCert  -c chains/chainmaker -u -P
+    bash $0 -t ChainMakerWithCert  -c chains/chainmaker -u -H
 EOF
 
   exit 0
@@ -189,7 +189,7 @@ update_fabric2_hub_contract() {
   java -Djdk.tls.client.protocols=TLSv1.2 -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative=false -Djdk.tls.namedGroups="SM2,secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448" -cp conf/:lib/*:plugin/* com.webank.wecross.stub.fabric2.hub.HubChaincodeDeployment upgrade "${chainName}"
 }
 
-chainmaker_proxy_contract() {
+deploy_or_update_chainmaker_proxy_contract() {
   local chainName="$1"
   local deploy="$2"
   local type="$3"
@@ -207,7 +207,7 @@ chainmaker_proxy_contract() {
   java -Djava.security.properties=${SECURIY_FILE} -Djdk.sunec.disableNative=false -Djdk.tls.namedGroups="SM2,secp256k1,x25519,secp256r1,secp384r1,secp521r1,x448" -cp conf/:lib/*:plugin/* com.webank.wecross.stub."${packageName}".preparation.ProxyDeployContract "${op}" "${chainName}"
 }
 
-chainmaker_hub_contract() {
+deploy_or_update_chainmaker_hub_contract() {
   local chainName="$1"
   local deploy="$2"
   local type="$3"
@@ -272,9 +272,9 @@ main() {
     ;;
   "chainmaker")
     if [[ "${contract}" == "proxy" ]]; then
-      chainmaker_proxy_contract "${chain}" "${deploy}" "${type}"
+      deploy_or_update_chainmaker_proxy_contract "${chain}" "${deploy}" "${type}"
     elif [[ "${contract}" == "hub" ]]; then
-      chainmaker_hub_contract "${chain}" "${deploy}" "${type}"
+      deploy_or_update_chainmaker_hub_contract "${chain}" "${deploy}" "${type}"
     fi
     ;;
   *)

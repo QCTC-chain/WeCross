@@ -8,7 +8,7 @@ help() {
     echo $1
     cat <<EOF
 Usage:
-    -t <type>                           [Required] type of chain: BCOS2.0, GM_BCOS2.0, Fabric1.4, Fabric2.0, BCOS3_ECDSA_EVM, BCOS3_GM_EVM, BCOS3_ECDSA_WASM, BCOS3_GM_WASM
+    -t <type>                           [Required] type of chain: BCOS2.0, GM_BCOS2.0, Fabric1.4, Fabric2.0, BCOS3_ECDSA_EVM, BCOS3_GM_EVM, BCOS3_ECDSA_WASM, BCOS3_GM_WASM, ChainMakerWithCert, ChainMakerGMWithCert, ChainMakerWithPublic, ChainMakerGMWithPublic
     -n <name>                           [Required] name of chain
     -d <dir>                            [Optional] generated target_directory, default conf/chains/
     -h                                  [Optional] Help
@@ -19,6 +19,7 @@ e.g
     bash $0 -t BCOS3_GM_EVM -n my_gm_bcos3_chain
     bash $0 -t Fabric1.4 -n my_fabric_chain
     bash $0 -t Fabric2.0 -n my_fabric_chain
+    bash $0 -t ChainMakerWithCert -n chainMaker
 EOF
 
     exit 0
