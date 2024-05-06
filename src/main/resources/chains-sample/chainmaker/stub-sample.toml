@@ -1,0 +1,25 @@
+[common]
+    name = 'chainmaker'
+    # ChainMakerWithCert/ChainMakerGMWithCert/ChainMakerWithPublic/ChainMakerGMWithPublic
+    type = 'ChainMakerWithCert'
+
+[endorsement]
+    entries = ['qctc003-org-id-001', 'qctc003-org-id-002', 'qctc003-org-id-003']
+
+[[qctc003-org-id-001]]
+    user_key_file_path = 'crypto-config/qctc003-org-id-001/user/qctc003-org-admin-001/qctc003-org-admin-001.tls.key'
+    user_crt_file_path = 'crypto-config/qctc003-org-id-001/user/qctc003-org-admin-001/qctc003-org-admin-001.tls.crt'
+    user_sign_key_file_path = 'crypto-config/qctc003-org-id-001/user/qctc003-org-admin-001/qctc003-org-admin-001.sign.key'
+    user_sign_crt_file_path = 'crypto-config/qctc003-org-id-001/user/qctc003-org-admin-001/qctc003-org-admin-001.sign.crt'
+
+[[qctc003-org-id-002]]
+    user_key_file_path = 'crypto-config/qctc003-org-id-002/user/qctc003-org-admin-002/qctc003-org-admin-002.tls.key'
+    user_crt_file_path = 'crypto-config/qctc003-org-id-002/user/qctc003-org-admin-002/qctc003-org-admin-002.tls.crt'
+    user_sign_key_file_path = 'crypto-config/qctc003-org-id-002/user/qctc003-org-admin-002/qctc003-org-admin-002.sign.key'
+    user_sign_crt_file_path = 'crypto-config/qctc003-org-id-002/user/qctc003-org-admin-002/qctc003-org-admin-002.sign.crt'
+
+[[qctc003-org-id-003]]
+    user_key_file_path = 'crypto-config/qctc003-org-id-003/user/qctc003-org-admin-003/qctc003-org-admin-003.tls.key'
+    user_crt_file_path = 'crypto-config/qctc003-org-id-003/user/qctc003-org-admin-003/qctc003-org-admin-003.tls.crt'
+    user_sign_key_file_path = 'crypto-config/qctc003-org-id-003/user/qctc003-org-admin-003/qctc003-org-admin-003.sign.key'
+    user_sign_crt_file_path = 'crypto-config/qctc003-org-id-003/user/qctc003-org-admin-003/qctc003-org-admin-003.sign.crt'
