@@ -17,6 +17,7 @@ import com.webank.wecross.restserver.request.ResourceRequest;
 import com.webank.wecross.restserver.response.ResourceResponse;
 import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.Path;
+import io.netty.handler.codec.http.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,12 @@ public class ListResourcesURIHandler implements URIHandler {
 
     @Override
     public void handle(
-            UserContext userContext, String uri, String method, String content, Callback callback) {
+            UserContext userContext,
+            HttpRequest httpRequest,
+            String uri,
+            String method,
+            String content,
+            Callback callback) {
         RestResponse<ResourceResponse> restResponse = new RestResponse<>();
 
         if (logger.isDebugEnabled()) {

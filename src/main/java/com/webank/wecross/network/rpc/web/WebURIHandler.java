@@ -3,10 +3,7 @@ package com.webank.wecross.network.rpc.web;
 import com.webank.wecross.account.UserContext;
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.network.rpc.handler.URIHandler;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,7 +17,12 @@ public class WebURIHandler implements URIHandler {
 
     @Override
     public void handle(
-            UserContext userContext, String uri, String method, String content, Callback callback) {
+            UserContext userContext,
+            HttpRequest httpRequest,
+            String uri,
+            String method,
+            String content,
+            Callback callback) {
 
         try {
             String filePath = toLocalPath(uri);

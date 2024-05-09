@@ -15,6 +15,7 @@ import com.webank.wecross.restserver.RestResponse;
 import com.webank.wecross.routine.xa.XATransactionManager;
 import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.Path;
+import io.netty.handler.codec.http.HttpRequest;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -80,6 +81,7 @@ public class XATransactionHandler implements URIHandler {
     @Override
     public void handle(
             UserContext userContext,
+            HttpRequest httpRequest,
             String uri,
             String httpMethod,
             String content,

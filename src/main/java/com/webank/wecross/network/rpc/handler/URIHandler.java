@@ -3,6 +3,7 @@ package com.webank.wecross.network.rpc.handler;
 import com.webank.wecross.account.UserContext;
 import com.webank.wecross.restserver.RestResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpRequest;
 import java.io.File;
 
 /** */
@@ -18,5 +19,10 @@ public interface URIHandler {
     }
 
     void handle(
-            UserContext userContext, String uri, String method, String content, Callback callback);
+            UserContext userContext,
+            HttpRequest httpRequest,
+            String uri,
+            String method,
+            String content,
+            Callback callback);
 }

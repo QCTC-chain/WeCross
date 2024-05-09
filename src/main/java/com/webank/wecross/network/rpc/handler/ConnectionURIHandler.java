@@ -2,20 +2,33 @@ package com.webank.wecross.network.rpc.handler;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moandjiezana.toml.Toml;
+import com.webank.wecross.Generator;
 import com.webank.wecross.account.AccountManager;
 import com.webank.wecross.account.UniversalAccount;
 import com.webank.wecross.account.UserContext;
 import com.webank.wecross.common.NetworkQueryStatus;
+import com.webank.wecross.common.WeCrossDefault;
+import com.webank.wecross.config.WeCrossTomlConfig;
 import com.webank.wecross.exception.WeCrossException;
 import com.webank.wecross.network.UriDecoder;
 import com.webank.wecross.network.p2p.P2PService;
 import com.webank.wecross.peer.PeerManager;
 import com.webank.wecross.peer.PeerManager.PeerDetails;
+import com.webank.wecross.resource.Resource;
 import com.webank.wecross.restserver.RestRequest;
 import com.webank.wecross.restserver.RestResponse;
+import com.webank.wecross.stub.Connection;
+import com.webank.wecross.stub.Driver;
+import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.utils.ToolUtils;
 import com.webank.wecross.zone.Chain;
+import com.webank.wecross.zone.ChainInfo;
 import com.webank.wecross.zone.Zone;
 import com.webank.wecross.zone.ZoneManager;
+import io.netty.handler.codec.http.HttpRequest;
+import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,9 +38,11 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 public class ConnectionURIHandler implements URIHandler {
     private Logger logger = LoggerFactory.getLogger(ConnectionURIHandler.class);
+    private Toml toml = null;
     private ObjectMapper objectMapper = new ObjectMapper();
 
     private P2PService p2PService;
@@ -67,7 +82,12 @@ public class ConnectionURIHandler implements URIHandler {
 
     @Override
     public void handle(
-            UserContext userContext, String uri, String method, String content, Callback callback) {
+            UserContext userContext,
+            HttpRequest httpRequest,
+            String uri,
+            String method,
+            String content,
+            Callback callback) {
         logger.debug(
                 "Handle rpc connection request: {} {} {} {}", userContext, uri, method, content);
         try {
@@ -108,12 +128,19 @@ public class ConnectionURIHandler implements URIHandler {
                 case "listZones":
                     handleListZones(userContext, uri, method, content, handleCallback);
                     break;
-                    /*
-                     * case "addChain": data = handleAddChain(userContext, uri, method, content);
-                     * break; case "updateChain": data = handleUpdateChain(userContext, uri, method,
-                     * content); break; case "removeChain": data = handleRemoveChain(userContext,
-                     * uri, method, content); break;
-                     */
+                case "addChain":
+                    handleAddChain(userContext, uri, method, content, handleCallback);
+                    break;
+                case "connectChain":
+                    handleConnectionChain(userContext, uri, method, content, handleCallback);
+                    break;
+                case "updateChain":
+                    handleUpdateChain(userContext, uri, method, content, handleCallback);
+                    break;
+                case "removeChain":
+                    handleRemoveChain(userContext, uri, method, content, handleCallback);
+                    break;
+
                 case "listPeers":
                     handleListPeers(userContext, uri, method, content, handleCallback);
                     break;
@@ -326,19 +353,320 @@ public class ConnectionURIHandler implements URIHandler {
         callback.onResponse(null, new ListData(zoneManager.getZones().size(), zones));
     }
 
-    private Object handleAddChain(
-            UserContext userContext, String uri, String method, String content) {
-        return null;
+    private String getChainRootPath() throws Exception {
+        if (this.toml == null) {
+            WeCrossTomlConfig weCrossTomlConfig = new WeCrossTomlConfig();
+            this.toml = weCrossTomlConfig.newToml();
+        }
+
+        String stubsPath = this.toml.getString("chains.path");
+        if (stubsPath == null || stubsPath.isEmpty()) {
+            stubsPath = this.toml.getString("stubs.path"); // To support old version
+        }
+
+        if (stubsPath == null || stubsPath.isEmpty()) {
+            String errorMessage =
+                    "\"path\" in [chains] item  not found, please check "
+                            + WeCrossDefault.MAIN_CONFIG_FILE;
+            throw new Exception(errorMessage);
+        }
+        return stubsPath;
     }
 
-    private Object handleUpdateChain(
-            UserContext userContext, String uri, String method, String content) {
-        return null;
+    public static class AddChain {
+        public String chainType;
+        public String chainName;
     }
 
-    private Object handleRemoveChain(
-            UserContext userContext, String uri, String method, String content) {
-        return null;
+    private void handleAddChain(
+            UserContext userContext,
+            String uri,
+            String method,
+            String content,
+            HandleCallback callback) {
+
+        AddChain data = null;
+        try {
+            String stubsPath = getChainRootPath();
+            RestRequest<AddChain> restRequest =
+                    objectMapper.readValue(content, new TypeReference<RestRequest<AddChain>>() {});
+            data = restRequest.getData();
+
+            PathMatchingResourcePatternResolver resolver =
+                    new PathMatchingResourcePatternResolver();
+            File dir = resolver.getResource(stubsPath).getFile();
+            File addChainDir = new File(dir + File.separator + data.chainName);
+            if (!addChainDir.exists()) {
+                logger.error("{} doesn't exist.", addChainDir.getPath());
+                callback.onResponse(
+                        new Exception(
+                                String.format("New chain named %s doesn't exist.", data.chainName)),
+                        null);
+                return;
+            }
+
+            File zipFile =
+                    new File(addChainDir.getPath() + File.separator + data.chainName + ".zip");
+            if (!zipFile.exists()) {
+                logger.error("{} doesn't exist.", zipFile.getPath());
+                callback.onResponse(
+                        new Exception(
+                                String.format("New chain named %s doesn't exist.", data.chainName)),
+                        null);
+                return;
+            }
+
+            // 解压配置文件
+            ToolUtils.unZip(zipFile.getPath(), addChainDir.getAbsolutePath());
+
+            // 执行 connection 操作
+            Generator.connectionChain(
+                    data.chainType, dir.getPath() + File.separator + data.chainName);
+
+            callback.onResponse(
+                    null, String.format("connection %s was successfully.", data.chainName));
+
+            // 部署系统合约 WeCrossHub 和 WeCrossProxy
+            boolean completed =
+                    ToolUtils.executeShell(
+                            60,
+                            "/bin/bash",
+                            "deploy_system_contract.sh",
+                            "-t",
+                            data.chainType,
+                            "-c",
+                            "chains" + File.separator + data.chainName,
+                            "-P");
+            if (!completed) {
+                callback.onResponse(
+                        new Exception("deploy WeCrossProxy contract was failure."), null);
+                return;
+            }
+
+            completed =
+                    ToolUtils.executeShell(
+                            60,
+                            "/bin/bash",
+                            "deploy_system_contract.sh",
+                            "-t",
+                            data.chainType,
+                            "-c",
+                            "chains" + File.separator + data.chainName,
+                            "-H");
+            if (!completed) {
+                callback.onResponse(new Exception("deploy WeCrossHub contract was failure."), null);
+                return;
+            }
+
+            logger.info(
+                    "connection {} was successfully on {}",
+                    data.chainName,
+                    dir.getPath() + File.separator + data.chainName);
+
+        } catch (Exception e) {
+            String chainName = data != null ? data.chainName : "#unknownChainName#";
+            logger.error("add a chain names {} was failure. {}", chainName, e.getMessage());
+            callback.onResponse(e, null);
+        }
+    }
+
+    public static class ConnectionChain {
+        public String chainType;
+        public String chainName;
+    }
+
+    private void handleConnectionChain(
+            UserContext userContext,
+            String uri,
+            String method,
+            String content,
+            HandleCallback callback) {
+        ConnectionChain data = null;
+        try {
+            String stubsPath = getChainRootPath();
+            RestRequest<ConnectionChain> restRequest =
+                    objectMapper.readValue(
+                            content, new TypeReference<RestRequest<ConnectionChain>>() {});
+            data = restRequest.getData();
+
+            PathMatchingResourcePatternResolver resolver =
+                    new PathMatchingResourcePatternResolver();
+            File dir = resolver.getResource(stubsPath).getFile();
+            File connectingChainDir = new File(dir + File.separator + data.chainName);
+            if (!connectingChainDir.exists()) {
+                logger.error(
+                        "connecting a chain names {}, but {} doesn't exist.",
+                        data.chainName,
+                        connectingChainDir.getPath());
+                callback.onResponse(
+                        new Exception(
+                                String.format(
+                                        "connecting a chain named %s doesn't exist.",
+                                        data.chainName)),
+                        null);
+                return;
+            }
+
+            // 1. 判断链的 stub 是否已经启动
+            String zoneName = this.toml.getString("common.zone");
+            Zone zone = zoneManager.getZone(zoneName);
+            if (zone.getChain(data.chainName) != null) {
+                callback.onResponse(
+                        new Exception(
+                                String.format("The chain names %s has existed.", data.chainName)),
+                        null);
+                return;
+            }
+
+            // 2. 连接 stub connection
+            String stubPath = String.format("classpath:%s/%s", dir.getName(), data.chainName);
+            Connection localConnection =
+                    zoneManager.getStubManager().newStubConnection(data.chainType, stubPath);
+            if (localConnection == null) {
+                callback.onResponse(
+                        new Exception(String.format("Init %s connection failed.", data.chainName)),
+                        null);
+                return;
+            }
+
+            // 3.
+            Driver driver = zoneManager.getStubManager().getStubDriver(data.chainType);
+            if (driver == null) {
+                callback.onResponse(
+                        new Exception(
+                                String.format(
+                                        "Stub driver type is %s doesn't exist.", data.chainType)),
+                        null);
+            }
+            List<ResourceInfo> resources = driver.getResources(localConnection);
+            Map<String, String> properties = localConnection.getProperties();
+            String checkSum = ChainInfo.buildChecksum(driver, localConnection);
+            ChainInfo chainInfo = new ChainInfo();
+            chainInfo.setName(data.chainName);
+            chainInfo.setProperties(properties);
+            chainInfo.setStubType(data.chainType);
+            chainInfo.setResources(resources);
+            chainInfo.setChecksum(checkSum);
+
+            Chain chain = new Chain(zoneName, chainInfo, driver, localConnection);
+            chain.setDriver(driver);
+            chain.setBlockManager(zoneManager.getMemoryBlockManagerFactory().build(chain));
+            chain.setStubType(data.chainType);
+
+            for (ResourceInfo resourceInfo : resources) {
+                com.webank.wecross.resource.Resource resource =
+                        new com.webank.wecross.resource.Resource();
+                Path path = new Path();
+                path.setZone(zoneName);
+                path.setChain(chainInfo.getName());
+                path.setResource(resourceInfo.getName());
+                resource.setPath(path);
+                resource.setDriver(chain.getDriver());
+                resource.addConnection(null, localConnection);
+                resource.setStubType(data.chainType);
+                resource.setResourceInfo(resourceInfo);
+
+                resource.setBlockManager(chain.getBlockManager());
+
+                chain.getResources().put(resourceInfo.getName(), resource);
+                logger.info(
+                        "Load local resource({}.{}.{}): {}",
+                        zone,
+                        data.chainName,
+                        resource.getResourceInfo().getName(),
+                        resource.getResourceInfo());
+            }
+            zone.getChains().put(data.chainName, chain);
+            chain.start();
+
+            callback.onResponse(null, stubPath);
+        } catch (Exception e) {
+            String chainName = data != null ? data.chainName : "#unknownChainName#";
+            logger.error("connecting a chain names {} was failure. {}", chainName, e.getMessage());
+            callback.onResponse(e, null);
+        }
+    }
+
+    private void handleUpdateChain(
+            UserContext userContext,
+            String uri,
+            String method,
+            String content,
+            HandleCallback callback) {}
+
+    public static class RemoveChain {
+        public String chainName;
+    }
+
+    private void stopRunningChain(String chainName) throws Exception {
+        String zoneName = this.toml.getString("common.zone");
+        Zone zone = zoneManager.getZone(zoneName);
+        if (zone == null) {
+            throw new Exception(String.format("Zone names %s doesn't exist.", zoneName));
+        }
+
+        Chain chain = zone.getChain(chainName);
+        if (chain == null) {
+            throw new Exception(String.format("Chain stub names %s doesn't exist.", chainName));
+        }
+        ChainInfo chainInfo = chain.getChainInfo();
+        List<ResourceInfo> resourceInfos = chainInfo.getResources();
+        for (ResourceInfo resourceInfo : resourceInfos) {
+            Resource resource = chain.getResource(resourceInfo.getName());
+            if (resource == null) {
+                continue;
+            }
+            if (!resource.isTemporary() && resource.isConnectionEmpty()) {
+                chain.removeResource(resourceInfo.getName(), false);
+            }
+        }
+
+        if (!chain.getPeers().isEmpty()) {
+            throw new Exception(String.format("Chain stub names %s has peers.", chainName));
+        }
+
+        chain.stop();
+        zone.getChains().remove(chainName);
+    }
+
+    private void handleRemoveChain(
+            UserContext userContext,
+            String uri,
+            String method,
+            String content,
+            HandleCallback callback) {
+        RemoveChain data = null;
+        try {
+            String chainRootPath = getChainRootPath();
+            RestRequest<RemoveChain> restRequest =
+                    objectMapper.readValue(
+                            content, new TypeReference<RestRequest<RemoveChain>>() {});
+            data = restRequest.getData();
+
+            // 停止 chain stub
+            stopRunningChain(data.chainName);
+
+            PathMatchingResourcePatternResolver resolver =
+                    new PathMatchingResourcePatternResolver();
+            File chainRootDir = resolver.getResource(chainRootPath).getFile();
+            File removingChainDir = new File(chainRootDir + File.separator + data.chainName);
+            if (removingChainDir.exists() && removingChainDir.isDirectory()) {
+                ToolUtils.deleteDirectory(removingChainDir);
+                callback.onResponse(null, data);
+            } else {
+                callback.onResponse(
+                        new Exception(
+                                String.format(
+                                        "removing a chain names %s doesn't exist.",
+                                        data.chainName)),
+                        null);
+            }
+
+        } catch (Exception e) {
+            String chainName = data != null ? data.chainName : "#unknownChainName#";
+            logger.error("remove a chain names {} was failure. {}", chainName, e.getMessage());
+            callback.onResponse(e, null);
+        }
     }
 
     private void handleListPeers(

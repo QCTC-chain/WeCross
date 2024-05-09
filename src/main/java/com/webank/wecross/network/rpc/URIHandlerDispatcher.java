@@ -82,6 +82,7 @@ public class URIHandlerDispatcher {
         registerURIHandler(new URIMethod("GET", "/conn/listChains"), connectionURIHandler);
         registerURIHandler(new URIMethod("GET", "/conn/listZones"), connectionURIHandler);
         registerURIHandler(new URIMethod("POST", "/conn/addChain"), connectionURIHandler);
+        registerURIHandler(new URIMethod("POST", "/conn/connectChain"), connectionURIHandler);
         registerURIHandler(new URIMethod("POST", "/conn/updateChain"), connectionURIHandler);
         registerURIHandler(new URIMethod("POST", "/conn/removeChain"), connectionURIHandler);
         registerURIHandler(new URIMethod("GET", "/conn/listPeers"), connectionURIHandler);
@@ -101,6 +102,9 @@ public class URIHandlerDispatcher {
 
         ResourceURIHandler resourceURIHandler = new ResourceURIHandler(host);
         registerURIHandler(RESOURCE_URIMETHOD, resourceURIHandler);
+
+        UpLoadFileURIHandler upLoadFileURIHandler = new UpLoadFileURIHandler();
+        registerURIHandler(new URIMethod("POST", "/upload/chain"), upLoadFileURIHandler);
 
         logger.info(" initialize size: {}", requestURIMapper.size());
         logger.info(" URIMethod: {} ", requestURIMapper.keySet());

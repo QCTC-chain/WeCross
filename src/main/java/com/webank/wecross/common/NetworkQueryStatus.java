@@ -34,6 +34,11 @@ public class NetworkQueryStatus {
     /** 70000+ is HTLC error real_state = 70000 + HTLCErrorCode */
     public static final int HTLC_ERROR = 70000;
 
+    /** 80000+ are errors for uploading a resource */
+    public static final int UPLOAD_RESOURCE_ERROR = 80000;
+
+    public static final int UPLOAD_RESOURCE_EXIST = 80001;
+
     public static String getStatusMessage(int status) {
         return getStatusMessage(status, "Error code: " + status);
     }

@@ -5,6 +5,7 @@ import com.webank.wecross.host.WeCrossHost;
 import com.webank.wecross.restserver.RestResponse;
 import com.webank.wecross.restserver.request.StateRequest;
 import com.webank.wecross.restserver.response.StateResponse;
+import io.netty.handler.codec.http.HttpRequest;
 
 /** GET /sys/state */
 public class StateURIHandler implements URIHandler {
@@ -27,7 +28,12 @@ public class StateURIHandler implements URIHandler {
 
     @Override
     public void handle(
-            UserContext userContext, String uri, String method, String content, Callback callback) {
+            UserContext userContext,
+            HttpRequest httpRequest,
+            String uri,
+            String method,
+            String content,
+            Callback callback) {
 
         StateResponse stateResponse = host.getState(new StateRequest());
         RestResponse<StateResponse> restResponse = new RestResponse<>();

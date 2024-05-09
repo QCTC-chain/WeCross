@@ -16,17 +16,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpUtil;
-import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.multipart.*;
 import io.netty.handler.ssl.SslCloseCompletionEvent;
 import io.netty.handler.ssl.SslHandshakeCompletionEvent;
 import io.netty.handler.timeout.IdleStateEvent;
@@ -114,6 +105,12 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         boolean keepAlive = HttpUtil.isKeepAlive(httpRequest);
         long currentTimeMillis = System.currentTimeMillis();
 
+        if (uri.equals("/upload/chain")) {
+            HttpPostRequestDecoder decoder =
+                    new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), httpRequest);
+            decoder.destroy();
+        }
+
         if (logger.isDebugEnabled()) {
             logger.debug(
                     " uri: {}, method: {}, version: {}, keepAlive: {}, content: {}",
@@ -167,6 +164,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
 
                     uriHandler.handle(
                             userContext,
+                            httpRequest,
                             uri,
                             method.toString(),
                             content,

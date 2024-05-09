@@ -10,6 +10,7 @@ import com.webank.wecross.network.UriDecoder;
 import com.webank.wecross.restserver.RestResponse;
 import com.webank.wecross.restserver.fetcher.TransactionFetcher;
 import com.webank.wecross.stub.*;
+import io.netty.handler.codec.http.HttpRequest;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ public class TransactionURIHandler implements URIHandler {
     @Override
     public void handle(
             UserContext userContext,
+            HttpRequest httpRequest,
             String uri,
             String httpMethod,
             String content,

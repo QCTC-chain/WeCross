@@ -195,7 +195,7 @@ deploy_or_update_chainmaker_proxy_contract() {
   local type="$3"
   local packageName=""
   case $type in
-  "chainmaker")
+  "ChainMakerWithCert" | "ChainMakerGMWithCert" | "ChainMakerWithPublic" | "ChainMakerGMWithPublic")
     packageName="chainmaker"
     ;;
   esac
@@ -213,7 +213,7 @@ deploy_or_update_chainmaker_hub_contract() {
   local type="$3"
   local packageName=""
   case $type in
-  "chainmaker")
+  "ChainMakerWithCert" | "ChainMakerGMWithCert" | "ChainMakerWithPublic" | "ChainMakerGMWithPublic")
     packageName="chainmaker"
     ;;
   esac
@@ -270,7 +270,7 @@ main() {
       update_fabric2_hub_contract "${chain}"
     fi
     ;;
-  "chainmaker")
+  "ChainMakerWithCert" | "ChainMakerGMWithCert" | "ChainMakerWithPublic" | "ChainMakerGMWithPublic")
     if [[ "${contract}" == "proxy" ]]; then
       deploy_or_update_chainmaker_proxy_contract "${chain}" "${deploy}" "${type}"
     elif [[ "${contract}" == "hub" ]]; then

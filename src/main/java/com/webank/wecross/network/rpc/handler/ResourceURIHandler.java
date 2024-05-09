@@ -22,6 +22,7 @@ import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.zone.Chain;
 import com.webank.wecross.zone.Zone;
 import com.webank.wecross.zone.ZoneManager;
+import io.netty.handler.codec.http.HttpRequest;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,7 @@ public class ResourceURIHandler implements URIHandler {
     @Override
     public void handle(
             UserContext userContext,
+            HttpRequest httpRequest,
             String uri,
             String httpMethod,
             String content,

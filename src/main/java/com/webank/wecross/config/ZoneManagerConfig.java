@@ -52,6 +52,11 @@ public class ZoneManagerConfig {
                                     chain.updateLocalResources(resourceInfos);
                                     zoneManager.newSeq();
                                 }
+
+                                @Override
+                                public void onANewResource(ResourceInfo resourceInfo) {
+                                    chain.addResource(resourceInfo);
+                                }
                             });
                 }
             }

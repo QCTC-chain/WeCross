@@ -9,6 +9,7 @@ import com.webank.wecross.restserver.RestResponse;
 import com.webank.wecross.restserver.response.StubResponse;
 import com.webank.wecross.stubmanager.StubManager;
 import com.webank.wecross.zone.ZoneManager;
+import io.netty.handler.codec.http.HttpRequest;
 import java.security.Provider;
 import java.security.Security;
 import java.util.stream.Collectors;
@@ -34,7 +35,12 @@ public class SystemInfoHandler implements URIHandler {
 
     @Override
     public void handle(
-            UserContext userContext, String uri, String method, String content, Callback callback) {
+            UserContext userContext,
+            HttpRequest httpRequest,
+            String uri,
+            String method,
+            String content,
+            Callback callback) {
         UriDecoder uriDecoder = new UriDecoder(uri);
         String operation = uriDecoder.getMethod();
         switch (operation) {

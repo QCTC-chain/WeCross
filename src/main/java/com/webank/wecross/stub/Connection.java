@@ -22,6 +22,8 @@ public interface Connection {
     // Callback for setConnectionEventHandler
     interface ConnectionEventHandler {
         void onResourcesChange(List<ResourceInfo> resourceInfos);
+
+        void onANewResource(ResourceInfo resourceInfo);
     }
     /**
      * set the callback of connection events

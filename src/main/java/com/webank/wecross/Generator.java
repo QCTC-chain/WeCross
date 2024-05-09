@@ -10,9 +10,21 @@ public class Generator {
     private static final int ARGS_LENGTH = 3;
     private static ApplicationContext context;
 
-    public static void main(String[] args) {
+    public static void connectionChain(String type, String path) throws Exception {
         context = new AnnotationConfigApplicationContext(StubManagerConfig.class);
+        StubManager stubManager = context.getBean(StubManager.class);
+        StubFactory stubFactory = stubManager.getStubFactory(type);
+        stubFactory.generateConnection(path, new String[] {});
+    }
 
+    public static void addChainAccount(String type, String path) throws Exception {
+        context = new AnnotationConfigApplicationContext(StubManagerConfig.class);
+        StubManager stubManager = context.getBean(StubManager.class);
+        StubFactory stubFactory = stubManager.getStubFactory(type);
+        stubFactory.generateAccount(path, new String[] {});
+    }
+
+    public static void main(String[] args) {
         if (args.length < ARGS_LENGTH) {
             System.out.println("Usage: connection/account <type> <path> <args>");
             return;
@@ -23,14 +35,11 @@ public class Generator {
         String path = args[2];
         System.out.println(String.format("operator: " + op + " type: " + type + " path: " + path));
 
-        StubManager stubManager = context.getBean(StubManager.class);
         try {
-            StubFactory stubFactory = stubManager.getStubFactory(type);
-
             if (op.equals("connection")) {
-                stubFactory.generateConnection(path, new String[] {});
+                connectionChain(type, path);
             } else if (op.equals("account")) {
-                stubFactory.generateAccount(path, new String[] {});
+                addChainAccount(type, path);
             } else {
                 System.err.println("Unknown operation: " + op);
             }

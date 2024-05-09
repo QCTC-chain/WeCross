@@ -208,6 +208,34 @@ public class Chain {
         }
     }
 
+    public void addResource(ResourceInfo resourceInfo) {
+        lock.writeLock().lock();
+        try {
+            String resourceName = resourceInfo.getName();
+            Resource resource = resources.get(resourceName);
+            if (resource != null) {
+                return;
+            }
+            resource = new Resource();
+            Path path = new Path();
+            path.setZone(zoneName);
+            path.setChain(name);
+            path.setResource(resourceName);
+            resource.setPath(path);
+            resource.setStubType(stubType);
+            resource.setTemporary(false);
+            resource.setResourceInfo(resourceInfo);
+            resource.setBlockManager(blockManager);
+            resource.setDriver(driver);
+            resource.addConnection(null, localConnection);
+            resources.put(resourceName, resource);
+        } catch (Exception e) {
+            logger.debug("Exception: " + e);
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     public void removeResource(Path path, boolean ignoreRemote) {
         removeResource(path.getResource(), ignoreRemote);
     }
