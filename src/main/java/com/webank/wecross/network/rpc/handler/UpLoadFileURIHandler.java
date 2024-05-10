@@ -34,12 +34,12 @@ public class UpLoadFileURIHandler implements URIHandler {
         String chainName = "";
         String stubsPath = "";
         FileUpload fileUpload = null;
-
-        HttpPostRequestDecoder decoder =
-                new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), httpRequest);
         RestResponse<Object> response = new RestResponse<>();
-
+        HttpPostRequestDecoder decoder = null;
         try {
+
+            decoder = new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), httpRequest);
+
             while (decoder.hasNext()) {
                 InterfaceHttpData data = decoder.next();
                 if (data.getHttpDataType() == InterfaceHttpData.HttpDataType.Attribute) {
@@ -81,7 +81,9 @@ public class UpLoadFileURIHandler implements URIHandler {
             response.setErrorCode(NetworkQueryStatus.UPLOAD_RESOURCE_ERROR);
             response.setMessage(e.getMessage());
         } finally {
-            decoder.destroy();
+            if (decoder != null) {
+                decoder.destroy();
+            }
         }
 
         callback.onResponse(response);

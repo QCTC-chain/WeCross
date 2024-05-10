@@ -105,12 +105,6 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
         boolean keepAlive = HttpUtil.isKeepAlive(httpRequest);
         long currentTimeMillis = System.currentTimeMillis();
 
-        if (uri.equals("/upload/chain")) {
-            HttpPostRequestDecoder decoder =
-                    new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), httpRequest);
-            decoder.destroy();
-        }
-
         if (logger.isDebugEnabled()) {
             logger.debug(
                     " uri: {}, method: {}, version: {}, keepAlive: {}, content: {}",
@@ -133,6 +127,31 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                             HttpVersion.HTTP_1_1,
                             HttpResponseStatus.NOT_FOUND,
                             Unpooled.wrappedBuffer("".getBytes()));
+
+            response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
+            response.headers()
+                    .set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
+            // close connection
+            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+            return;
+        }
+
+        // TODO
+        // Avoid throw an exception names io.netty.util.IllegalReferenceCountException in thread
+        // pool(threadPoolTaskExecutor.execute).
+        // A better way may be fix this an issue later.
+        try {
+            if (HttpPostRequestDecoder.isMultipart(httpRequest)) {
+                HttpPostRequestDecoder decoder =
+                        new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), httpRequest);
+                decoder.destroy();
+            }
+        } catch (Exception e) {
+            FullHttpResponse response =
+                    new DefaultFullHttpResponse(
+                            HttpVersion.HTTP_1_1,
+                            HttpResponseStatus.NOT_ACCEPTABLE,
+                            Unpooled.wrappedBuffer(e.getMessage().getBytes()));
 
             response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
             response.headers()
