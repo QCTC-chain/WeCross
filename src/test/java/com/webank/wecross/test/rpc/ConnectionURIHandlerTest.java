@@ -78,6 +78,7 @@ public class ConnectionURIHandlerTest {
         AtomicInteger hit = new AtomicInteger(0);
         connectionURIHandler.handle(
                 null,
+                null,
                 "/listChains",
                 "GET",
                 "",
@@ -114,6 +115,7 @@ public class ConnectionURIHandlerTest {
 
         connectionURIHandler.handle(
                 null,
+                null,
                 "/listChains?zone=test-zone&offset=1000&size=100",
                 "GET",
                 "",
@@ -149,6 +151,7 @@ public class ConnectionURIHandlerTest {
 
         Set<String> paths = new HashSet<String>();
         connectionURIHandler.handle(
+                null,
                 null,
                 "/listChains?zone=test-zone&offset=0&size=0",
                 "GET",
@@ -196,6 +199,7 @@ public class ConnectionURIHandlerTest {
             final int index = i;
             connectionURIHandler.handle(
                     null,
+                    null,
                     "/listChains?" + queryString,
                     "GET",
                     "",
@@ -238,6 +242,7 @@ public class ConnectionURIHandlerTest {
 
         connectionURIHandler.handle(
                 null,
+                null,
                 "/listChains?zone=test-zone2",
                 "GET",
                 "",
@@ -269,6 +274,7 @@ public class ConnectionURIHandlerTest {
         Assert.assertEquals(14, hit.intValue());
 
         connectionURIHandler.handle(
+                null,
                 null,
                 "/listChains?zone=test-zone&offset=0&size=0",
                 "GET",
@@ -302,6 +308,7 @@ public class ConnectionURIHandlerTest {
 
         paths.clear();
         connectionURIHandler.handle(
+                null,
                 null,
                 "/listChains?zone=test-zone&offset=95&size=50",
                 "GET",
@@ -365,6 +372,7 @@ public class ConnectionURIHandlerTest {
             final int index = i;
             connectionURIHandler.handle(
                     null,
+                    null,
                     "/listZones?" + queryString,
                     "GET",
                     "",
@@ -402,6 +410,7 @@ public class ConnectionURIHandlerTest {
 
         paths.clear();
         connectionURIHandler.handle(
+                null,
                 null,
                 "/listZones?offset=95&size=50",
                 "GET",
