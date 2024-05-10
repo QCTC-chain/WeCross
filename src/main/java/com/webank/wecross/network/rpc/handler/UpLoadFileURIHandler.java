@@ -53,9 +53,15 @@ public class UpLoadFileURIHandler implements URIHandler {
                     fileUpload = (FileUpload) data;
                 }
             }
-            if (chainType.isEmpty() || chainName.isEmpty() || fileUpload == null) {
+            if (chainType.isEmpty()) {
                 response.setErrorCode(NetworkQueryStatus.UPLOAD_RESOURCE_ERROR);
-                response.setMessage("chainType|chainName|chainConfigZip is missing.");
+                response.setMessage("chainType is missing.");
+            } else if (chainName.isEmpty()) {
+                response.setErrorCode(NetworkQueryStatus.UPLOAD_RESOURCE_ERROR);
+                response.setMessage("chainName is missing.");
+            } else if (fileUpload == null) {
+                response.setErrorCode(NetworkQueryStatus.UPLOAD_RESOURCE_ERROR);
+                response.setMessage("fileUpload is missing.");
             } else {
                 if (this.toml == null) {
                     WeCrossTomlConfig weCrossTomlConfig = new WeCrossTomlConfig();
