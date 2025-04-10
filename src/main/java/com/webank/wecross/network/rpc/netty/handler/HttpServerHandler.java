@@ -420,6 +420,10 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<HttpRequest> 
                 || uriMethod.startsWith("supportedStubs")
                 || uriMethod.startsWith("login")
                 || uriMethod.startsWith("register")
+                || uriMethod.startsWith("chain")
+                || uriMethod.startsWith("addChain")
+                || uriMethod.startsWith("removeChain")
+                || uriMethod.startsWith("connectChain")
                 || splits[1].equalsIgnoreCase("s")) {
             return false;
         }
