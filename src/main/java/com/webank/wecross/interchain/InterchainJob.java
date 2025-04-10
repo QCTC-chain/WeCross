@@ -172,7 +172,9 @@ public class InterchainJob implements Job {
         String result = null;
         try {
             result = future.get(RoutineDefault.CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS);
-            if (Objects.isNull(result) || RoutineDefault.NULL_FLAG.equals(result)) {
+            if (Objects.isNull(result)
+                    || RoutineDefault.NULL_FLAG.equals(result)
+                    || result.isEmpty()) {
                 return new String[] {};
             }
 
