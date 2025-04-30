@@ -59,6 +59,21 @@ public interface Driver {
             Driver.Callback callback);
 
     /**
+     * subscribe contract event the interface of contract or chaincode Just fake async for
+     * compatibility, you need to override this function
+     *
+     * @param request the transaction request
+     * @param connection the connection of a chain
+     * @param callback the callback class for async sendTransaction
+     * @return the transaction response
+     */
+    void subscribeEvent(
+            TransactionContext context,
+            SubscribeRequest request,
+            Connection connection,
+            Driver.Callback callback);
+
+    /**
      * Get block number
      *
      * @return block number

@@ -18,6 +18,7 @@ import com.webank.wecross.restserver.RestResponse;
 import com.webank.wecross.routine.htlc.HTLCManager;
 import com.webank.wecross.stub.ObjectMapperFactory;
 import com.webank.wecross.stub.Path;
+import com.webank.wecross.stub.SubscribeRequest;
 import com.webank.wecross.stub.TransactionRequest;
 import com.webank.wecross.zone.Chain;
 import com.webank.wecross.zone.Zone;
@@ -74,7 +75,6 @@ public class ResourceURIHandler implements URIHandler {
             String content,
             Callback callback) {
         RestResponse<Object> restResponse = new RestResponse<>();
-
         UniversalAccount ua;
         Path path = new Path();
         try {
@@ -262,6 +262,47 @@ public class ResourceURIHandler implements URIHandler {
 
                                     callback.onResponse(restResponse);
                                 });
+                        return;
+                    }
+                case "subscribeevent":
+                    {
+                        Resource resourceObj = getResource(path);
+                        if (resourceObj == null) {
+                            restResponse.setErrorCode(NetworkQueryStatus.URI_PATH_ERROR);
+                            restResponse.setMessage("Resource not found");
+                        }
+
+                        RestRequest<SubscribeRequest> restRequest =
+                                objectMapper.readValue(
+                                        content,
+                                        new TypeReference<RestRequest<SubscribeRequest>>() {});
+
+                        restRequest.checkRestRequest();
+                        SubscribeRequest subscribeRequest = restRequest.getData();
+                        resourceObj.subscribeEvent(
+                                subscribeRequest,
+                                ua,
+                                (transactionException, transactionResponse) -> {
+                                    if (logger.isDebugEnabled()) {
+                                        logger.debug(
+                                                " TransactionResponse: {}, TransactionException, ",
+                                                transactionResponse,
+                                                transactionException);
+                                    }
+
+                                    if (transactionException != null
+                                            && !transactionException.isSuccess()) {
+                                        restResponse.setErrorCode(
+                                                NetworkQueryStatus.RESOURCE_ERROR
+                                                        + transactionException.getErrorCode());
+                                        restResponse.setMessage(transactionException.getMessage());
+                                    } else {
+                                        restResponse.setData(transactionResponse);
+                                    }
+
+                                    callback.onResponse(restResponse);
+                                });
+                        // Response Will be returned in the callback
                         return;
                     }
                 default:

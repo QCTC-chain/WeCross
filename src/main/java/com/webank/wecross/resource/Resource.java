@@ -1,6 +1,12 @@
 package com.webank.wecross.resource;
 
+import com.moandjiezana.toml.Toml;
 import com.webank.wecross.account.UniversalAccount;
+import com.webank.wecross.config.WeCrossTomlConfig;
+import com.webank.wecross.mq.config.MqConfig;
+import com.webank.wecross.mq.core.MqConnector;
+import com.webank.wecross.mq.core.MqException;
+import com.webank.wecross.mq.factory.MqConnectorFactory;
 import com.webank.wecross.peer.Peer;
 import com.webank.wecross.stub.*;
 import java.security.SecureRandom;
@@ -12,6 +18,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.support.MessageBuilder;
 
 public class Resource {
     private Logger logger = LoggerFactory.getLogger(Response.class);
@@ -24,6 +32,7 @@ public class Resource {
     boolean hasLocalConnection = false;
     boolean isTemporary = false;
     private Random random = new SecureRandom();
+    private Map<String, MqConnector> mqConnectors = new HashMap<>();
 
     public static final String RAW_TRANSACTION = "RAW_TRANSACTION";
 
@@ -170,6 +179,83 @@ public class Resource {
                         callback.onTransactionResponse(transactionException, transactionResponse);
                     });
         }
+    }
+
+    private MqConnector getOrCreateMqConnector(String contract) throws Exception {
+        MqConnector connector = mqConnectors.get(contract);
+        if (connector == null) {
+            WeCrossTomlConfig tomlConfig = new WeCrossTomlConfig();
+            Toml toml = tomlConfig.newToml();
+            MqConfig mqConfig = new MqConfig();
+            mqConfig.setMqType(toml.getString("mq.type"));
+            mqConfig.setHost(toml.getString("mq.host"));
+            mqConfig.setPort(toml.getLong("mq.port"));
+            mqConfig.setTopic(toml.getString("mq.topic"));
+            connector = MqConnectorFactory.createConnector(mqConfig);
+            mqConnectors.put(contract, connector);
+        }
+        return connector;
+    }
+
+    private void pushSubscribeEvent(String contract, String topic, Object event) {
+        try {
+            Map<String, Object> values = new HashMap<>();
+            values.put("TAG", topic);
+            values.put("KEY", contract);
+            MessageHeaders headers = new MessageHeaders(values);
+            MqConnector connector = getOrCreateMqConnector(contract);
+            connector.send(MessageBuilder.createMessage(event, headers));
+            logger.info(
+                    "push subscribe event success. contract: {}, topic: {}, data: {}",
+                    contract,
+                    topic,
+                    event);
+        } catch (MqException e) {
+            logger.error("push subscribe event was failure. MqException: {}", e.getMessage());
+        } catch (Exception e) {
+            logger.error("push subscribe event was failure. Exception: {}", e.getMessage());
+        }
+    }
+
+    public void subscribeEvent(
+            SubscribeRequest request, UniversalAccount ua, Resource.Callback callback) {
+        try {
+            checkAccount(ua);
+        } catch (TransactionException e) {
+            callback.onTransactionResponse(e, null);
+            return;
+        }
+
+        Account account = ua.getAccount(stubType);
+        TransactionContext context =
+                new TransactionContext(account, this.path, this.resourceInfo, this.blockManager);
+
+        context.setCallback(
+                new TransactionContext.Callback() {
+                    @Override
+                    public void onSubscribe(String contract, String topic, Object event) {
+                        logger.info(
+                                "push subscribe event(contract: {}, topic: {}, data: {})",
+                                contract,
+                                topic,
+                                event);
+                        pushSubscribeEvent(contract, topic, event);
+                    }
+                });
+
+        driver.subscribeEvent(
+                context,
+                request,
+                chooseConnection(),
+                (transactionException, transactionResponse) -> {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(
+                                "subscribeEvent response: {}, exception: ",
+                                transactionResponse,
+                                transactionException);
+                    }
+                    callback.onTransactionResponse(transactionException, transactionResponse);
+                });
     }
 
     public void onRemoteTransaction(Request request, Connection.Callback callback) {

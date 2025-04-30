@@ -37,6 +37,15 @@
     maxTotal = 200
     maxPerRoute = 8
 
+[mq]
+    # kafka/rabbitmq/rocketmq
+    type = 'rocketmq'
+    host = '127.0.0.1'
+    port = 8081
+    userName = ''
+    password = ''
+    topic = 'wecross'
+    group = ''
 
 #[[htlc]]
 #    selfPath = 'payment.bcos.htlc'

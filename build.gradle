@@ -162,6 +162,17 @@ dependencies {
     compile 'org.apache.httpcomponents:httpclient:4.5.13'
     compile 'io.netty:netty-all'
 
+    compile 'org.springframework:spring-messaging:5.3.31'
+    compile ('com.rabbitmq:amqp-client:5.18.0') {
+        exclude group: "io.netty"
+    }
+    compile ('org.apache.kafka:kafka-clients:3.7.1') {
+        exclude group: "io.netty"
+    }
+    compile ('org.apache.rocketmq:rocketmq-client-java:5.0.5') {
+        exclude group: "io.netty"
+    }
+
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:2.7.9'

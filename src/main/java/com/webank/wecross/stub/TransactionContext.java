@@ -47,6 +47,8 @@ public class TransactionContext {
                 + resourceInfo.toString()
                 + ", blockManager="
                 + blockManager
+                + ", callback="
+                + callback
                 + '}';
     }
 
@@ -56,5 +58,19 @@ public class TransactionContext {
 
     public void setPath(Path path) {
         this.path = path;
+    }
+
+    public interface Callback {
+        void onSubscribe(String contract, String topic, Object event);
+    }
+
+    private Callback callback;
+
+    public void setCallback(Callback callback) {
+        this.callback = callback;
+    }
+
+    public Callback getCallback() {
+        return callback;
     }
 }
