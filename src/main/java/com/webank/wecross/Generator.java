@@ -10,11 +10,11 @@ public class Generator {
     private static final int ARGS_LENGTH = 3;
     private static ApplicationContext context;
 
-    public static void connectionChain(String type, String path) throws Exception {
+    public static void connectionChain(String type, String path, String[] args) throws Exception {
         context = new AnnotationConfigApplicationContext(StubManagerConfig.class);
         StubManager stubManager = context.getBean(StubManager.class);
         StubFactory stubFactory = stubManager.getStubFactory(type);
-        stubFactory.generateConnection(path, new String[] {});
+        stubFactory.generateConnection(path, args);
     }
 
     public static void addChainAccount(String type, String path) throws Exception {
@@ -37,7 +37,7 @@ public class Generator {
 
         try {
             if (op.equals("connection")) {
-                connectionChain(type, path);
+                connectionChain(type, path, new String[] {});
             } else if (op.equals("account")) {
                 addChainAccount(type, path);
             } else {

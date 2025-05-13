@@ -3,7 +3,6 @@ package com.webank.wecross.mq.impl;
 import com.webank.wecross.mq.config.MqConfig;
 import com.webank.wecross.mq.core.MqConnector;
 import com.webank.wecross.mq.core.MqException;
-import com.webank.wecross.stub.Response;
 import java.util.Collections;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;

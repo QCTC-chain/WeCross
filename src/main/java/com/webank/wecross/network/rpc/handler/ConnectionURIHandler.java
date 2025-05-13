@@ -29,12 +29,7 @@ import com.webank.wecross.zone.Zone;
 import com.webank.wecross.zone.ZoneManager;
 import io.netty.handler.codec.http.HttpRequest;
 import java.io.File;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -373,9 +368,52 @@ public class ConnectionURIHandler implements URIHandler {
         return stubsPath;
     }
 
+    public static class ChainNode {
+        public String ip;
+        public int port;
+        public boolean enableTLS;
+
+        @Override
+        public String toString() {
+            return "ChainNode {"
+                    + "ip='"
+                    + ip
+                    + "',"
+                    + "port="
+                    + String.format("%s", port)
+                    + ","
+                    + "enable_tls="
+                    + String.format("%d", enableTLS)
+                    + "}";
+        }
+    }
+
     public static class AddChain {
         public String chainType;
         public String chainName;
+        public String chainId;
+        public String orgId;
+        public List<ChainNode> chainNodes;
+
+        @Override
+        public String toString() {
+            return "AddChain {"
+                    + "chainType='"
+                    + chainType
+                    + "',"
+                    + "chainName='"
+                    + chainId
+                    + "',"
+                    + "chainId='"
+                    + chainId
+                    + "',"
+                    + "orgId='"
+                    + orgId
+                    + "',"
+                    + "chainNodes="
+                    + chainNodes.toString()
+                    + "}";
+        }
     }
 
     private void handleAddChain(
@@ -392,76 +430,56 @@ public class ConnectionURIHandler implements URIHandler {
                     objectMapper.readValue(content, new TypeReference<RestRequest<AddChain>>() {});
             data = restRequest.getData();
 
+            if (data.chainType.isEmpty()) {
+                callback.onResponse(new Exception("chainType is missing"), null);
+                return;
+            }
+            if (data.chainName.isEmpty()) {
+                callback.onResponse(new Exception("chainName is missing"), null);
+                return;
+            }
+            if (data.chainNodes.isEmpty()) {
+                callback.onResponse(new Exception("chainNodes is missing"), null);
+                return;
+            }
+            if (data.chainNodes.get(0).ip.isEmpty()) {
+                callback.onResponse(new Exception("chainNodes.ip is missing"), null);
+                return;
+            }
+            if (data.chainNodes.get(0).port <= 0) {
+                callback.onResponse(new Exception("chainNodes.port is missing"), null);
+                return;
+            }
+
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
             File dir = resolver.getResource(stubsPath).getFile();
             File addChainDir = new File(dir + File.separator + data.chainName);
             if (!addChainDir.exists()) {
-                logger.error("{} doesn't exist.", addChainDir.getPath());
-                callback.onResponse(
-                        new Exception(
-                                String.format("New chain named %s doesn't exist.", data.chainName)),
-                        null);
-                return;
+                addChainDir.mkdirs();
             }
 
-            File zipFile =
-                    new File(addChainDir.getPath() + File.separator + data.chainName + ".zip");
-            if (!zipFile.exists()) {
-                logger.error("{} doesn't exist.", zipFile.getPath());
-                callback.onResponse(
-                        new Exception(
-                                String.format("New chain named %s doesn't exist.", data.chainName)),
-                        null);
-                return;
-            }
-
-            // 解压配置文件
-            ToolUtils.unZip(zipFile.getPath(), addChainDir.getAbsolutePath());
-
+            String[] args =
+                    new String[] {
+                        data.chainType,
+                        data.chainName,
+                        data.chainId,
+                        data.orgId,
+                        data.chainNodes.get(0).ip,
+                        String.format("%d", data.chainNodes.get(0).port),
+                        data.chainNodes.get(0).enableTLS ? "true" : "false"
+                    };
             // 执行 connection 操作
             Generator.connectionChain(
-                    data.chainType, dir.getPath() + File.separator + data.chainName);
-
-            callback.onResponse(
-                    null, String.format("connection %s was successfully.", data.chainName));
-
-            // 部署系统合约 WeCrossHub 和 WeCrossProxy
-            boolean completed =
-                    ToolUtils.executeShell(
-                            60,
-                            "/bin/bash",
-                            "deploy_system_contract.sh",
-                            "-t",
-                            data.chainType,
-                            "-c",
-                            "chains" + File.separator + data.chainName,
-                            "-P");
-            if (!completed) {
-                callback.onResponse(
-                        new Exception("deploy WeCrossProxy contract was failure."), null);
-                return;
-            }
-
-            completed =
-                    ToolUtils.executeShell(
-                            60,
-                            "/bin/bash",
-                            "deploy_system_contract.sh",
-                            "-t",
-                            data.chainType,
-                            "-c",
-                            "chains" + File.separator + data.chainName,
-                            "-H");
-            if (!completed) {
-                callback.onResponse(new Exception("deploy WeCrossHub contract was failure."), null);
-                return;
-            }
+                    data.chainType, dir.getPath() + File.separator + data.chainName, args);
 
             logger.info(
                     "connection {} was successfully on {}",
-                    data.chainName,
+                    data,
                     dir.getPath() + File.separator + data.chainName);
+
+            callback.onResponse(
+                    null, String.format("connection %s was successfully.", data.chainName));
 
         } catch (Exception e) {
             String chainName = data != null ? data.chainName : "#unknownChainName#";
@@ -470,9 +488,42 @@ public class ConnectionURIHandler implements URIHandler {
         }
     }
 
+    private boolean deploySystemContract(String chainType, String chainName) throws Exception {
+        // 部署系统合约 WeCrossHub 和 WeCrossProxy
+        boolean completed =
+                ToolUtils.executeShell(
+                        60,
+                        "/bin/bash",
+                        "deploy_system_contract.sh",
+                        "-t",
+                        chainType,
+                        "-c",
+                        "chains" + File.separator + chainName,
+                        "-P");
+        if (!completed) {
+            return false;
+        }
+
+        completed =
+                ToolUtils.executeShell(
+                        60,
+                        "/bin/bash",
+                        "deploy_system_contract.sh",
+                        "-t",
+                        chainType,
+                        "-c",
+                        "chains" + File.separator + chainName,
+                        "-H");
+        if (!completed) {
+            return false;
+        }
+        return true;
+    }
+
     public static class ConnectionChain {
         public String chainType;
         public String chainName;
+        public boolean ifDeploySystemContract;
     }
 
     private void handleConnectionChain(
@@ -504,6 +555,14 @@ public class ConnectionURIHandler implements URIHandler {
                                         "connecting a chain named %s doesn't exist.",
                                         data.chainName)),
                         null);
+                return;
+            }
+
+            if (data.ifDeploySystemContract
+                    && !deploySystemContract(data.chainType, data.chainName)) {
+                // 部署系统合约 WeCrossHub 和 WeCrossProxy
+                callback.onResponse(
+                        new Exception("deploy WeCrossProxy contract was failure."), null);
                 return;
             }
 
