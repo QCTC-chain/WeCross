@@ -1,5 +1,6 @@
 package com.webank.wecross.network.rpc.handler;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moandjiezana.toml.Toml;
@@ -368,50 +369,30 @@ public class ConnectionURIHandler implements URIHandler {
         return stubsPath;
     }
 
-    public static class ChainNode {
-        public String ip;
-        public int port;
-        public boolean enableTLS;
-
-        @Override
-        public String toString() {
-            return "ChainNode {"
-                    + "ip='"
-                    + ip
-                    + "',"
-                    + "port="
-                    + String.format("%s", port)
-                    + ","
-                    + "enable_tls="
-                    + String.format("%d", enableTLS)
-                    + "}";
-        }
-    }
-
     public static class AddChain {
         public String chainType;
         public String chainName;
-        public String chainId;
-        public String orgId;
-        public List<ChainNode> chainNodes;
+        public Object stubConfig;
 
         @Override
         public String toString() {
+            String stubConfigStr = "writeValueAsString(stubConfig)";
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                stubConfigStr = objectMapper.writeValueAsString(stubConfig);
+            } catch (JsonProcessingException e) {
+
+            }
+
             return "AddChain {"
                     + "chainType='"
                     + chainType
                     + "',"
                     + "chainName='"
-                    + chainId
+                    + chainName
                     + "',"
-                    + "chainId='"
-                    + chainId
-                    + "',"
-                    + "orgId='"
-                    + orgId
-                    + "',"
-                    + "chainNodes="
-                    + chainNodes.toString()
+                    + "stubConfig='"
+                    + stubConfigStr
                     + "}";
         }
     }
@@ -438,18 +419,6 @@ public class ConnectionURIHandler implements URIHandler {
                 callback.onResponse(new Exception("chainName is missing"), null);
                 return;
             }
-            if (data.chainNodes.isEmpty()) {
-                callback.onResponse(new Exception("chainNodes is missing"), null);
-                return;
-            }
-            if (data.chainNodes.get(0).ip.isEmpty()) {
-                callback.onResponse(new Exception("chainNodes.ip is missing"), null);
-                return;
-            }
-            if (data.chainNodes.get(0).port <= 0) {
-                callback.onResponse(new Exception("chainNodes.port is missing"), null);
-                return;
-            }
 
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
@@ -457,17 +426,18 @@ public class ConnectionURIHandler implements URIHandler {
             File addChainDir = new File(dir + File.separator + data.chainName);
             if (!addChainDir.exists()) {
                 addChainDir.mkdirs();
+            } else {
+                callback.onResponse(
+                        new Exception(String.format("%s has existed.", data.chainName)), null);
+                return;
             }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String stubConfig = objectMapper.writeValueAsString(data.stubConfig);
 
             String[] args =
                     new String[] {
-                        data.chainType,
-                        data.chainName,
-                        data.chainId,
-                        data.orgId,
-                        data.chainNodes.get(0).ip,
-                        String.format("%d", data.chainNodes.get(0).port),
-                        data.chainNodes.get(0).enableTLS ? "true" : "false"
+                        data.chainType, data.chainName, stubConfig,
                     };
             // 执行 connection 操作
             Generator.connectionChain(
