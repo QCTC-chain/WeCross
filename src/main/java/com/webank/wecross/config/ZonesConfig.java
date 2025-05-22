@@ -82,12 +82,10 @@ public class ZonesConfig {
                 result.put(network, networkBean);
             } else {
                 logger.error("No stubs found in {}", network);
-                System.exit(1);
             }
 
         } catch (WeCrossException e) {
             logger.error(e.getMessage());
-            System.exit(1);
         }
 
         return result;
@@ -127,11 +125,20 @@ public class ZonesConfig {
                 throw new WeCrossException(WeCrossException.ErrorCode.FIELD_MISSING, errorMessage);
             }
 
-            Connection localConnection = stubManager.newStubConnection(type, stubPath);
-            if (localConnection == null) {
-                logger.error("Init localConnection: {}-{} failed", stubPath, type);
+            Connection localConnection = null;
+            try {
+                localConnection = stubManager.newStubConnection(type, stubPath);
+            } catch (WeCrossException e) {
+                logger.warn("Init {}-{} connection is unsuccessful. {}", e.getMessage());
+            }
 
-                throw new WeCrossException(-1, "Init localConnection failed");
+            if (localConnection == null) {
+                logger.error(
+                        "Init {}-{} connection is unsuccessful. please check stub config. {}",
+                        type,
+                        chainName,
+                        stubPath);
+                continue;
             }
 
             Driver driver = stubManager.getStubDriver(type);
