@@ -129,7 +129,11 @@ public class ZonesConfig {
             try {
                 localConnection = stubManager.newStubConnection(type, stubPath);
             } catch (WeCrossException e) {
-                logger.warn("Init {}-{} connection is unsuccessful. {}", e.getMessage());
+                logger.warn(
+                        "Init {}-{} connection is unsuccessful. {}",
+                        type,
+                        chainName,
+                        e.getMessage());
             }
 
             if (localConnection == null) {
