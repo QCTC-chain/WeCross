@@ -130,12 +130,12 @@ public class InterchainJob implements Job {
                         if (transactionException.getErrorCode()
                                 == TransactionException.ErrorCode.ACCOUNT_ERRPR) {
                             /* if has not config chain account for router */
-                            logger.warn(
+                            logger.debug(
                                     "Failed to get interchain requests, path: {}, errorMessage: {}",
                                     hubResource.getPath(),
                                     transactionException.getMessage());
                         } else {
-                            logger.error(
+                            logger.debug(
                                     "Failed to get interchain requests, path: {}, errorMessage: {}",
                                     hubResource.getPath(),
                                     transactionException.getMessage());
@@ -145,7 +145,7 @@ public class InterchainJob implements Job {
                             future.complete(InterchainDefault.NULL_FLAG);
                         }
                     } else if (transactionResponse.getErrorCode() != 0) {
-                        logger.error(
+                        logger.debug(
                                 "Failed to get interchain requests, path: {}, errorMessage: {}",
                                 hubResource.getPath(),
                                 transactionResponse.getMessage());
