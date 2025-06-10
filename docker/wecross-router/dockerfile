@@ -7,4 +7,4 @@ RUN apt-get update && \
     tar -zxvf wecross-router.tar.gz && \
     rm wecross-router.tar.gz
 
-CMD [ "bash", "/wecross-router/start.sh"]
+#CMD [ "bash", "/wecross-router/start.sh"]
