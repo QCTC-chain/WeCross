@@ -432,13 +432,18 @@ public class ConnectionURIHandler implements URIHandler {
                 return;
             }
 
-            ObjectMapper objectMapper = new ObjectMapper();
             String stubConfig = objectMapper.writeValueAsString(data.stubConfig);
+            Map<String, Object> mq = new HashMap<>();
+            mq.put("type", this.toml.getString("mq.type"));
+            mq.put("host", this.toml.getString("mq.host"));
+            mq.put("port", this.toml.getLong("mq.port"));
+            mq.put("topic", this.toml.getString("mq.topic"));
+            mq.put("group", this.toml.getString("mq.group"));
+            Map<String, Object> mqConfigObject = new HashMap<>();
+            mqConfigObject.put("mq", mq);
+            String mqConfig = objectMapper.writeValueAsString(mqConfigObject);
 
-            String[] args =
-                    new String[] {
-                        data.chainType, data.chainName, stubConfig,
-                    };
+            String[] args = new String[] {data.chainType, data.chainName, stubConfig, mqConfig};
             // 执行 connection 操作
             Generator.connectionChain(
                     data.chainType, dir.getPath() + File.separator + data.chainName, args);
