@@ -678,7 +678,11 @@ public class ConnectionURIHandler implements URIHandler {
             data = restRequest.getData();
 
             // 停止 chain stub
-            stopRunningChain(data.chainName);
+            try {
+                stopRunningChain(data.chainName);
+            } catch (Exception e) {
+
+            }
 
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
