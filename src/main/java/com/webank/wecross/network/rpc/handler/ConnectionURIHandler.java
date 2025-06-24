@@ -612,6 +612,19 @@ public class ConnectionURIHandler implements URIHandler {
             }
             zone.getChains().put(data.chainName, chain);
             chain.start();
+            localConnection.setConnectionEventHandler(
+                    new Connection.ConnectionEventHandler() {
+                        @Override
+                        public void onResourcesChange(List<ResourceInfo> resourceInfos) {
+                            chain.updateLocalResources(resourceInfos);
+                            zoneManager.newSeq();
+                        }
+
+                        @Override
+                        public void onANewResource(ResourceInfo resourceInfo) {
+                            chain.addResource(resourceInfo);
+                        }
+                    });
 
             callback.onResponse(null, stubPath);
         } catch (Exception e) {
@@ -678,7 +691,11 @@ public class ConnectionURIHandler implements URIHandler {
             data = restRequest.getData();
 
             // 停止 chain stub
-            stopRunningChain(data.chainName);
+            try {
+                stopRunningChain(data.chainName);
+            } catch (Exception e) {
+
+            }
 
             PathMatchingResourcePatternResolver resolver =
                     new PathMatchingResourcePatternResolver();
