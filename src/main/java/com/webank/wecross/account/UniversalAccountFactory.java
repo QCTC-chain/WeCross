@@ -40,6 +40,7 @@ public class UniversalAccountFactory {
                 // type 可能是这样的格式: stubType-chainName
                 String[] splits = type.split("-");
                 String stubType = splits[0];
+                details.setType(stubType);
 
                 Account account = stubManager.newStubAccount(stubType, details.toProperties());
 
