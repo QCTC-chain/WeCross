@@ -86,7 +86,7 @@ public class ResourceTest {
 
         UniversalAccount ua = Mockito.mock(UniversalAccount.class);
         Account account = Mockito.mock(Account.class);
-        Mockito.when(ua.getAccount(Mockito.any())).thenReturn(account);
+        Mockito.when(ua.getAccount(Mockito.any(), Mockito.any())).thenReturn(account);
 
         resource.asyncCall(
                 request,
