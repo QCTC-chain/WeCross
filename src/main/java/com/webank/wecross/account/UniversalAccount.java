@@ -31,8 +31,8 @@ public class UniversalAccount {
 
     private Map<String, Account> type2DefaultAccount = new HashMap<>();
 
-    public Account getAccount(String type) {
-        return type2DefaultAccount.get(type);
+    public Account getAccount(String type, String chainName) {
+        return type2DefaultAccount.get(type + '-' + chainName);
     }
 
     public void setDefaultAccount(String type, Account account) {

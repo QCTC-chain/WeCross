@@ -96,7 +96,7 @@ public class Resource {
             return;
         }
 
-        Account account = ua.getAccount(stubType);
+        Account account = ua.getAccount(stubType, path.getChain());
         TransactionContext context =
                 new TransactionContext(account, this.path, this.resourceInfo, this.blockManager);
         boolean isRawTransaction =
@@ -143,7 +143,7 @@ public class Resource {
             return;
         }
 
-        Account account = ua.getAccount(stubType);
+        Account account = ua.getAccount(stubType, path.getChain());
         TransactionContext context =
                 new TransactionContext(account, this.path, this.resourceInfo, this.blockManager);
         boolean isRawTransaction =
@@ -226,7 +226,7 @@ public class Resource {
             return;
         }
 
-        Account account = ua.getAccount(stubType);
+        Account account = ua.getAccount(stubType, path.getChain());
         TransactionContext context =
                 new TransactionContext(account, this.path, this.resourceInfo, this.blockManager);
 
@@ -285,7 +285,7 @@ public class Resource {
                     TransactionException.ErrorCode.ACCOUNT_ERRPR, "UniversalAccount is null");
         }
 
-        if (Objects.isNull(ua.getAccount(stubType))) {
+        if (Objects.isNull(ua.getAccount(stubType, path.getChain()))) {
             throw new TransactionException(
                     TransactionException.ErrorCode.ACCOUNT_ERRPR,
                     "Account with type '" + stubType + "' not found for " + ua.getName());

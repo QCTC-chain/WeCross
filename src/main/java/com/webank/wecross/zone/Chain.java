@@ -428,7 +428,7 @@ public class Chain {
             return;
         }
 
-        Account account = ua.getAccount(getStubType());
+        Account account = ua.getAccount(getStubType(), getName());
         if (Objects.isNull(account)) {
             callback.onResponse(
                     new TransactionException(

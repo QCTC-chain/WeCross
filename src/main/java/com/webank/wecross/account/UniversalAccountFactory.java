@@ -39,11 +39,9 @@ public class UniversalAccountFactory {
                 String type = details.getType();
                 // type 可能是这样的格式: stubType-chainName
                 String[] splits = type.split("-");
-                if (splits.length == 2) {
-                    type = splits[0];
-                }
+                String stubType = splits[0];
 
-                Account account = stubManager.newStubAccount(type, details.toProperties());
+                Account account = stubManager.newStubAccount(stubType, details.toProperties());
 
                 if (account == null) {
                     logger.error(
