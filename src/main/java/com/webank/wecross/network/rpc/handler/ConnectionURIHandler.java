@@ -19,10 +19,7 @@ import com.webank.wecross.peer.PeerManager.PeerDetails;
 import com.webank.wecross.resource.Resource;
 import com.webank.wecross.restserver.RestRequest;
 import com.webank.wecross.restserver.RestResponse;
-import com.webank.wecross.stub.Connection;
-import com.webank.wecross.stub.Driver;
-import com.webank.wecross.stub.Path;
-import com.webank.wecross.stub.ResourceInfo;
+import com.webank.wecross.stub.*;
 import com.webank.wecross.utils.ToolUtils;
 import com.webank.wecross.zone.Chain;
 import com.webank.wecross.zone.ChainInfo;
@@ -694,7 +691,7 @@ public class ConnectionURIHandler implements URIHandler {
             try {
                 stopRunningChain(data.chainName);
             } catch (Exception e) {
-
+                logger.warn("Stop a running chain is unsuccessfully. {}", e);
             }
 
             PathMatchingResourcePatternResolver resolver =
