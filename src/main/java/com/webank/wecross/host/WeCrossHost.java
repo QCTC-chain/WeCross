@@ -74,7 +74,7 @@ public class WeCrossHost {
         boolean flag = true;
         while (flag) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(10000);
                 broadcastStatus();
                 dumpStatus();
 
