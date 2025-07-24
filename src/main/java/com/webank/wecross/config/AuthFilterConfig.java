@@ -24,6 +24,7 @@ public class AuthFilterConfig {
         remoteAuthFilter.registerAuthUri("/auth/register");
         remoteAuthFilter.registerAuthUri("/auth/login");
         remoteAuthFilter.registerAuthUri("/admin/auth/loginWithoutPwd");
+        remoteAuthFilter.registerAuthUri("/auth/routerLogin");
         remoteAuthFilter.registerAuthUri("/auth/logout");
         remoteAuthFilter.registerAuthUri("/auth/addChainAccount");
         remoteAuthFilter.registerAuthUri("/auth/removeChainAccount");
