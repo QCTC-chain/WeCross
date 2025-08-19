@@ -639,6 +639,7 @@ public class ConnectionURIHandler implements URIHandler {
             HandleCallback callback) {}
 
     public static class RemoveChain {
+        public String chainType;
         public String chainName;
     }
 
@@ -690,6 +691,10 @@ public class ConnectionURIHandler implements URIHandler {
             // 停止 chain stub
             try {
                 stopRunningChain(data.chainName);
+                StubFactory factory = zoneManager.getStubManager().getStubFactory(data.chainType);
+                if (factory != null) {
+                    factory.releaseConnection();
+                }
             } catch (Exception e) {
                 logger.warn("Stop a running chain is unsuccessfully. {}", e);
             }
