@@ -26,6 +26,8 @@ public interface StubFactory {
      */
     public Connection newConnection(String path);
 
+    public void releaseConnection();
+
     /**
      * use sec and cert to new account
      *
