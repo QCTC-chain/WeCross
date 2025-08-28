@@ -42,6 +42,11 @@ public class UniversalAccountFactory {
                 String stubType = splits[0];
                 details.setType(stubType);
 
+                // 如果没有加载相关插件，就不创建该插件的链账户
+                if (!stubManager.hasFactory(stubType)) {
+                    continue;
+                }
+
                 Account account = stubManager.newStubAccount(stubType, details.toProperties());
 
                 if (account == null) {
