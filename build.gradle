@@ -172,6 +172,7 @@ dependencies {
     compile ('org.apache.rocketmq:rocketmq-client-java:5.0.5') {
         exclude group: "io.netty"
     }
+    compile 'com.alibaba.nacos:nacos-client:2.2.1'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13.2'

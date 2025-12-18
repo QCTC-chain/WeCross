@@ -47,6 +47,11 @@
     topic = 'wecross'
     group = ''
 
+[nacos]
+    serviceAddr = 'nacos:8848'
+    nameSpace = 'prod'
+    groupName = 'DEFAULT_GROUP'
+
 #[[htlc]]
 #    selfPath = 'payment.bcos.htlc'
 #    counterpartyPath = 'payment.fabric.htlc'

@@ -1,5 +1,8 @@
 package com.webank.wecross.config;
 
+import com.alibaba.nacos.api.NacosFactory;
+import com.alibaba.nacos.api.PropertyKeyConst;
+import com.alibaba.nacos.api.naming.NamingService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.moandjiezana.toml.Toml;
 import com.webank.wecross.common.WeCrossDefault;
@@ -11,6 +14,7 @@ import com.webank.wecross.stub.ResourceInfo;
 import com.webank.wecross.stubmanager.MemoryBlockManagerFactory;
 import com.webank.wecross.stubmanager.StubManager;
 import com.webank.wecross.utils.ConfigUtils;
+import com.webank.wecross.utils.NetworkUtils;
 import com.webank.wecross.zone.Chain;
 import com.webank.wecross.zone.ChainInfo;
 import com.webank.wecross.zone.Zone;
@@ -19,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import javax.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +96,21 @@ public class ZonesConfig {
         return result;
     }
 
+    private void registerService() {
+        try {
+            Properties properties = new Properties();
+            properties.setProperty(
+                    PropertyKeyConst.SERVER_ADDR, toml.getString("nacos.serviceAddr"));
+            properties.setProperty(PropertyKeyConst.NAMESPACE, toml.getString("nacos.nameSpace"));
+            NamingService namingService = NacosFactory.createNamingService(properties);
+            String localIp = NetworkUtils.getLocalIP();
+            namingService.registerInstance(
+                    "bmsp-cross", toml.getString("nacos.groupName"), localIp, 8251);
+        } catch (Exception e) {
+            logger.warn("注册服务至 Nacos 失败。 {}", e.getMessage());
+        }
+    }
+
     public Map<String, Chain> getChains(String zone, Map<String, String> chainsDir)
             throws WeCrossException {
         Map<String, Chain> stubMap = new HashMap<>();
@@ -128,6 +148,7 @@ public class ZonesConfig {
             Connection localConnection = null;
             try {
                 localConnection = stubManager.newStubConnection(type, stubPath);
+                registerService();
             } catch (WeCrossException e) {
                 logger.warn(
                         "Init {}-{} connection is unsuccessful. {}",
