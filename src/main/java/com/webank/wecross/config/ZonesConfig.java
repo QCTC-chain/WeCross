@@ -103,9 +103,12 @@ public class ZonesConfig {
                     PropertyKeyConst.SERVER_ADDR, toml.getString("nacos.serviceAddr"));
             properties.setProperty(PropertyKeyConst.NAMESPACE, toml.getString("nacos.nameSpace"));
             NamingService namingService = NacosFactory.createNamingService(properties);
-            String localIp = NetworkUtils.getLocalIP();
+            String dubboIpToRegistry = toml.getString("nacos.dubboIpToRegistry");
+            if (dubboIpToRegistry == null || dubboIpToRegistry.isEmpty()) {
+                dubboIpToRegistry = NetworkUtils.getLocalIP();
+            }
             namingService.registerInstance(
-                    "bmsp-cross", toml.getString("nacos.groupName"), localIp, 8251);
+                    "bmsp-cross", toml.getString("nacos.groupName"), dubboIpToRegistry, 8251);
         } catch (Exception e) {
             logger.warn("注册服务至 Nacos 失败。 {}", e.getMessage());
         }
