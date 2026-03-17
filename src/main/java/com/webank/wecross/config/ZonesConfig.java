@@ -98,9 +98,13 @@ public class ZonesConfig {
 
     private void registerService() {
         try {
+            String serviceAddr = toml.getString("nacos.serviceAddr");
+            if(serviceAddr == null || serviceAddr.isEmpty()) {
+                return;
+            }
             Properties properties = new Properties();
             properties.setProperty(
-                    PropertyKeyConst.SERVER_ADDR, toml.getString("nacos.serviceAddr"));
+                    PropertyKeyConst.SERVER_ADDR, serviceAddr);
             properties.setProperty(PropertyKeyConst.NAMESPACE, toml.getString("nacos.nameSpace"));
             NamingService namingService = NacosFactory.createNamingService(properties);
             String dubboIpToRegistry = toml.getString("nacos.dubboIpToRegistry");
