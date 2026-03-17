@@ -47,6 +47,12 @@
     topic = 'wecross'
     group = ''
 
+[nacos]
+    serviceAddr = 'nacos:8848'
+    nameSpace = 'prod'
+    groupName = 'DEFAULT_GROUP'
+    dubboIpToRegistry = '127.0.0.1'
+
 #[[htlc]]
 #    selfPath = 'payment.bcos.htlc'
 #    counterpartyPath = 'payment.fabric.htlc'
