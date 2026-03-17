@@ -42,7 +42,7 @@ public class StubManager {
         try {
             return getStubFactory(type).newAccount(properties);
         } catch (Exception e) {
-            logger.info("newStubAccount exception: ", e);
+            // logger.info("newStubAccount exception: ", e);
             return null;
         }
     }
